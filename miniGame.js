@@ -141,6 +141,8 @@ class Bullet {
         this.vy = vy;
         this.alive = true;
 
+        this.lifetime = 20;
+
         this.height = 2;
         this.width = 2;
     }
@@ -158,6 +160,10 @@ class Bullet {
     update() {
         this.x += this.vx;
         this.y += this.vy;
+        this.lifetime--;
+        if(this.lifetime<0){
+            this.alive = false;
+        }
     }
 }
 class Missle{
@@ -288,9 +294,9 @@ class Item3 {
 
     effect(obj){
         obj.bulletMaker = (objlist, subject)=>{
-            objlist.push(new Bullet(subject.x + 61, subject.y + 10, 8, 3));
+            objlist.push(new Bullet(subject.x + 61, subject.y + 10, 8, 6));
             objlist.push(new Bullet(subject.x + 61, subject.y + 10, 10, 0));
-            objlist.push(new Bullet(subject.x + 61, subject.y + 10, 8, -3));
+            objlist.push(new Bullet(subject.x + 61, subject.y + 10, 8, -6));
         }
     }
 
@@ -650,7 +656,7 @@ class HiokiShooter {
             }
             //r
             if (this.#keySet.has(82)) {
-                this.#mainObjects.push(new Missle(550, 50, 3, 0, 3, this.#me, this.#bgObjects));
+                this.#mainObjects.push(new Missle(550, 50, 0, 3, 3, this.#me, this.#bgObjects));
             }
 
 
