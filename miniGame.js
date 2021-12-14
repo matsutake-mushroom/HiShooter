@@ -1,4 +1,4 @@
-class HiddenCmd {
+export class HiddenCmd {
     #cmd = []
     #func = function () { };
     #itr = 0;
@@ -55,13 +55,14 @@ class Me {
         //console.log(this.drawflag);
         if(this.drawflag){
             c.drawImage(this.img_me, this.x, this.y, this.width, this.height);
+        }else{
+            console.log(this.drawflag);
         }
     }
     update() {
         if (this.y + 20 > 120) {
             this.y = 80;
-            this.life--;
-            console.log("ouch!!!!");
+            this.addlife(-1);
         };
     }
 
@@ -69,20 +70,19 @@ class Me {
         this.life += val;
 
         if(val<0){
-            //clearTimeout(this.timer);
-            //clearTimeout(this.flashtimer);
+            clearTimeout(this.timer);
+            clearTimeout(this.flashtimer);
 
-            this.flashtimer = setInterval(function(){
+            this.flashtimer = setInterval(()=>{
                 this.drawflag = !(this.drawflag);
-                console.log(this.drawflag);
             }, 100);
-            /*
-            this.timer = setTimeout(function(){
+            
+            this.timer = setTimeout(()=>{
                 clearInterval(this.flashtimer);
-                //this.drawflag = true;
+                this.drawflag = true;
                 clearTimeout(this.timer);
-            }, 3000)
-            */
+            }, 1000)
+            
         }
 
         /*
@@ -330,7 +330,7 @@ class ItemL {
     }
 }
 
-class HiokiShooter {
+export class HiokiShooter {
     #canvas;
     #parent;
     #ctx;
@@ -758,8 +758,3 @@ class HiokiShooter {
         }
     }
 };
-
-const cmd = [38, 38, 40, 40, 37, 39, 37, 39, 66, 65];
-
-var game = new HiokiShooter(document.body);//document.getElementsByClassName("main-content")[0]);
-let hc = new HiddenCmd(cmd, game.start, true);
