@@ -56,7 +56,7 @@ class Me {
         if(this.drawflag){
             c.drawImage(this.img_me, this.x, this.y, this.width, this.height);
         }else{
-            console.log(this.drawflag);
+            ;
         }
     }
     update() {
@@ -662,7 +662,9 @@ export class HiokiShooter {
 
             //generate enemy
             var roll = Math.floor(Math.random() * 100);//0-99
+            
             if (roll % 20 == 0) {
+                console.log("!");
                 this.#mainObjects.push(new En1(this.#canvas.width, Math.random() * 100, -20, 0));
             }
 
