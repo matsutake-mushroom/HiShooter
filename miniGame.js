@@ -183,6 +183,7 @@ class Missle{
         this.angle = Math.atan2(this.vy, this.vx);
 
         this.score = 1;
+        this.restrictItemDrop = true;
     }
 
     //c: context2d
@@ -707,12 +708,14 @@ export class HiokiShooter {
                         if(!mo.alive){//when destroyed by user
                             this.#score += mo.score;
 
-                            var roll = Math.floor(Math.random() * 100);//0-99
-                            if (roll % 10 == 0) {
-                                this.#itemObjects.push(new Item3(mo.x, mo.y, -1, 1, this.#img_item3));
-                            }
-                            if (roll % 17 == 0) {
-                                this.#itemObjects.push(new ItemL(mo.x, mo.y, -1, 1, this.#img_itemL));
+                            if(!mo.restrictItemDrop){
+                                var roll = Math.floor(Math.random() * 100);//0-99
+                                if (roll % 10 == 0) {
+                                    this.#itemObjects.push(new Item3(mo.x, mo.y, -1, 1, this.#img_item3));
+                                }
+                                else if (roll % 17 == 0) {
+                                    this.#itemObjects.push(new ItemL(mo.x, mo.y, -1, 1, this.#img_itemL));
+                                }
                             }
 
                         }
