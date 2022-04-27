@@ -101,6 +101,80 @@ class En1 {
     }
 }
 
+class Boss1 {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.alive = true;
+        this.width = 80;
+        this.height = 80;
+        this.mode = "appear";
+        this.damaged = false;
+
+        this.life = 100;
+        this.alive = true;
+
+        this.itr = 0;
+        this.score = 100;
+
+        this.kind = "boss";
+    }
+    //c: context2d
+    addlife(val) {
+        if(val < 0){
+            this.damaged = true;
+        }
+
+        this.life += val;
+        if (this.life === 0) {
+            this.mode = "explosion";
+        }
+    }
+
+    draw(c) {
+        c.beginPath();
+        c.rect(this.x, this.y, this.width, this.height);
+        c.fillStyle = "gray";
+        c.fill();
+    }
+    update() {
+        switch(this.mode){
+            case "appear":
+                this.x -= 3;
+                this.itr++;
+                if(this.itr > 30){
+                    this.itr = 0;
+                    this.mode = "attack";
+                }
+                break;
+            case "attack":
+                ;
+                
+                break;
+            case "explosion":
+                this.itr++;
+                if(this.itr % 12 == 0 || this.itr % 12 == 1){
+                    this.damaged = true;
+                }
+
+                if(this.itr > 60){
+                    this.alive = false;
+                }
+                break;
+            default:
+                break;
+        }
+        if(this.damaged){
+            this.width = 0;
+            this.height = 0;
+            this.damaged = false;
+        }else{
+            this.width = 80;
+            this.height = 80;
+        }
+    }
+}
+
 class Bullet {
     constructor(x, y, vx, vy) {
         this.x = x;
@@ -306,6 +380,9 @@ export class HiokiShooter {
     #score = 0;
     #highscore = 0;
 
+    #stage = "normal";
+    #clearedStages = [];
+
     #gameId = 0;
 
     #now = Date.now();
@@ -349,6 +426,7 @@ export class HiokiShooter {
         //bind public functions
         this.start = this.start.bind(this);
         this.startScene = this.startScene.bind(this);
+        this.changeStage = this.changeStage.bind(this);
         this.gameloop = this.gameloop.bind(this);
         this.gameOverScene = this.gameOverScene.bind(this);
 
@@ -387,7 +465,8 @@ export class HiokiShooter {
     }
 
     startScene() {
-        
+        this.#stage = "normal";
+        this.#clearedStages = [];
 
         if (this.#keySet.has(32)) {//spacekey pressed
             window.cancelAnimationFrame(this.#gameId);
@@ -423,6 +502,11 @@ export class HiokiShooter {
             this.#ctx.fillText("Press 'R' to restart.", 100, 120);
             this.#gameId = window.requestAnimationFrame(this.gameOverScene);
         }
+    }
+
+    changeStage(name){
+        this.#clearedStages.push(this.#stage);
+        this.#stage = name;
     }
 
     #drawTitle() {
@@ -482,6 +566,7 @@ export class HiokiShooter {
         this.#ctx.fillText("LIFE: " + this.#me.life, 10, 10);
         //score
         this.#ctx.fillText(("SCORE: " + this.#score).padStart(5, '0'), 200, 10);
+        this.#ctx.fillText(("Hightest Score: " + this.#highscore).padStart(5, '0'), 300, 10);
 
         //controll explanation
         this.#ctx.drawImage(this.#img_wasd, 10, 130);
@@ -499,7 +584,7 @@ export class HiokiShooter {
         //bullet to object
         for (var i = 0; i < this.#bullets.length; ++i) {
             var b = this.#bullets[i];
-            for (var j = 1; j < this.#mainObjects.length; ++j) {
+            for (var j = 1; j < this.#mainObjects.length; ++j) {//自機以外
                 //bullet to object
                 var collided = false;
                 var o = this.#mainObjects[j];
@@ -566,6 +651,10 @@ export class HiokiShooter {
                 }
             }
         }
+        //enemy bullet to me
+        this.#bullets.forEach(b=>{
+
+        });
         //me to object (i==0: me)
         for (var i = 1; i < this.#mainObjects.length; ++i){
             var o = this.#mainObjects[i];
@@ -573,8 +662,14 @@ export class HiokiShooter {
                 continue;
             }else{
                 this.#me.addlife(-1);
-                //o.addlife(-1);
-                o.alive = false;
+                switch(o.kind){
+                    case "boss":
+                        o.addlife(-1);
+                        break;
+                    default:
+                        o.alive = false;
+                        break;
+                }
             }
         }
         //me to items
@@ -629,12 +724,37 @@ export class HiokiShooter {
                 this.#mainObjects.push(new Missle(550, 50, 0, 3, 3, this.#me, this.#bgObjects));
             }
 
+            //update score
+            if(this.#score >= this.#highscore){
+                this.#highscore = this.#score;
+            }
 
-            //generate enemy
-            var roll = Math.floor(Math.random() * 100);//0-99
-            
-            if (roll % 20 == 0) {
-                this.#mainObjects.push(new En1(this.#canvas.width, Math.random() * 100, -20, 0));
+            //change stage
+            if(this.#score >= 100 && this.#stage != "boss1" &&!this.#clearedStages.includes("boss1")){
+                console.log(this.#clearedStages);
+                this.#stage = "boss1";
+                this.#mainObjects.push(new Boss1(this.#canvas.width, 50));
+            }else if(this.#score >= 1000 && this.#stage != "boss2" &&!this.#clearedStages.includes("boss2")){
+                console.log(this.#clearedStages);
+                this.#stage = "boss2";
+                this.#mainObjects.push(new Boss1(this.#canvas.width, 50));
+            }
+
+            //generate enemy etc.
+            switch(this.#stage){
+                case "normal":
+                    var roll = Math.floor(Math.random() * 100);//0-99
+                    if (roll % 20 == 0) {
+                        this.#mainObjects.push(new En1(this.#canvas.width, Math.random() * 100, -20, 0));
+                    }
+                    break;
+                case "boss":
+                    break;
+                
+                case "result":
+                    break;
+                default:
+                    break;
             }
 
             //------
@@ -685,7 +805,9 @@ export class HiokiShooter {
                                     this.#itemObjects.push(new ItemL(mo.x, mo.y, -1, 1, this.#img_itemL));
                                 }
                             }
-
+                            if(mo.kind === "boss"){
+                                this.changeStage("normal");
+                            }
                         }
                         this.#mainObjects.splice(i, 1);
                         i--;
