@@ -424,7 +424,27 @@ export class HiokiShooter {
                     break;
                 case "boss":
                     break;
-                
+                case "stage02":
+                    var roll = Math.floor(Math.random() * 100);//0-99
+                    if (roll % 20 == 0) {
+                        this.#mainObjects.push(new En_md(this.#canvas.width, Math.random() * 100, -20, 0));
+                    }
+
+                    if (roll % 16 == 0) {
+                        this.#mainObjects.push(new En_sm(this.#canvas.width, Math.random() * 100, -10, 0));
+                    }
+                    break;
+                 case "stage03":
+                    var roll = Math.floor(Math.random() * 100);//0-99
+                    if (roll % 20 == 0) {
+                        this.#mainObjects.push(new En_md(this.#canvas.width, Math.random() * 100, -25, 0));
+                    }
+
+                    if (roll % 16 == 0) {
+                        this.#mainObjects.push(new En_sm(this.#canvas.width + Math.random() * 10, Math.random() * 100, -9, 0));
+                        this.#mainObjects.push(new En_sm(this.#canvas.width + Math.random() * 10, Math.random() * 100, -7, 0));
+                    }
+                    break;
                 case "result":
                     break;
                 default:
@@ -480,7 +500,7 @@ export class HiokiShooter {
                                 }
                             }
                             if(mo.kind === "boss"){
-                                this.changeStage("normal");
+                                this.changeStage(mo.unlockStage || "normal");
                             }
                         }
 

@@ -13,8 +13,8 @@ export class Missle{
 
         this.width = 1;
         this.height = 1;
-        this.v_width = 12;
-        this.v_height = 3;
+        this.v_width = 14;
+        this.v_height = 5;
 
         this.damage = 2;
         this.angle = Math.atan2(this.vy, this.vx);

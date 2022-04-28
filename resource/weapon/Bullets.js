@@ -44,8 +44,8 @@ export class Bullet_B1 {
         this.lifetime = 120;
         this.damage = 1;
 
-        this.height = 2;
-        this.width = 2;
+        this.height = 4;
+        this.width = 4;
     }
 
     //c: context2d
