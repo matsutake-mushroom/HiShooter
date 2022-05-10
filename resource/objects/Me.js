@@ -8,7 +8,7 @@ export class Me {
         this.alive = true;
         this.width = 60;
         this.height = 20;
-        this.life = 10;
+        this.life = 20;
         this.defaultBulletMaker = (objlist, subject)=>{
             objlist.push(new Bullet(subject.x + 61, subject.y + 10, 20, 0));
         };

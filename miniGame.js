@@ -1,7 +1,7 @@
 import { Me } from "./resource/objects/Me";
 import { Missle } from "./resource/weapon/Missle";
 import {En_sm, En_md} from "./resource/objects/Enemies";
-import {Boss1} from "./resource/objects/Boss";
+import {Boss1, Boss2, LastBoss} from "./resource/objects/Boss";
 import {Cloud, Sand} from "./resource/background/objects";
 import {Item3, ItemL} from "./resource/Items";
 
@@ -62,6 +62,7 @@ export class HiokiShooter {
         this.manager_getItem = this.getItem.bind(this);
         this.gameloop = this.gameloop.bind(this);
         this.gameOverScene = this.gameOverScene.bind(this);
+        this.gameClearScene = this.gameClearScene.bind(this);
 
         window.addEventListener("keydown", this.#keydown.bind(this));
         window.addEventListener("keyup", this.#keyup.bind(this));
@@ -153,6 +154,7 @@ export class HiokiShooter {
     gameOverScene(){
         if (this.#keySet.has(82)) {//r pressed
             //destruct
+            this.#score = 0;
             this.#mainObjects = [];
             this.#itemObjects = [];
             this.#bullets = [];
@@ -163,10 +165,100 @@ export class HiokiShooter {
             this.#ctx.clearRect(0, 0, this.#canvas.width, this.#canvas.height);
             this.#ctx.fillStyle = "gray";
             this.#ctx.font = "14px Arial";
-            this.#ctx.fillText("GAME OVER", 100, 100);
-            this.#ctx.font = "12px Arial";
-            this.#ctx.fillText("Press 'R' to restart.", 100, 120);
+            this.#ctx.fillText("GAME OVER", 100, 80);
+            this.#ctx.beginPath();
+            this.#ctx.moveTo(100, 87);
+            this.#ctx.lineTo(300, 87);
+            this.#ctx.closePath();
+            this.#ctx.strokeStyle = "lightgray";
+            this.#ctx.stroke();
+
+            this.#ctx.fillText("your score: " + this.#score, 100, 115);
+            if(this.#score === this.#highscore && this.#score > 0){
+                this.#ctx.fillStyle = "#0095DD";
+                this.#ctx.font = "9px Arial";
+                this.#ctx.fillText("NEW RECORD!!", 240, 115);
+                this.#ctx.fillStyle = "gray"; 
+            }
+            if(this.#clock){
+                this.#ctx.font = "12px Arial";
+                this.#ctx.fillText("Press 'R' to restart.", 100, 130);
+            }
             this.#gameId = window.requestAnimationFrame(this.gameOverScene);
+        }
+    }
+
+    gameClearScene(){
+        if (this.#keySet.has(82)) {//r pressed
+            //destruct
+            this.#score = 0;
+            this.#mainObjects = [];
+            this.#itemObjects = [];
+            this.#bullets = [];
+            this.#bullets_en = [];
+            this.#me = new Me(10, 70, this.#img_me);
+            this.#gameId = window.requestAnimationFrame(this.startScene);
+        } else {
+            this.#now = Date.now();
+            if (this.#now - this.#then > this.#fpsInterval) {
+                this.#then = new Date(this.#now);
+            
+                this.#ctx.clearRect(0, 0, this.#canvas.width, this.#canvas.height);
+
+                //background
+                this.#me.life = 100;//keep
+                var score = this.#score;
+                this.#drawBackground();
+                this.#collisionDetect();
+                this.#updateObjects();
+                this.#score = score;
+
+                this.#ctx.font = "16px Arial";
+                this.#ctx.fillStyle = "#0095DD";
+                this.#ctx.fillText("Congratulations!!", 100, 60);
+                this.#ctx.beginPath();
+                this.#ctx.moveTo(100, 67);
+                this.#ctx.lineTo(300, 67);
+                this.#ctx.closePath();
+                this.#ctx.strokeStyle = "#0095DD";
+                this.#ctx.stroke();
+
+                this.#ctx.fillStyle = "gray";
+                this.#ctx.fillText("your score: " + this.#score, 100, 95);
+                if(this.#score >= this.#highscore && this.#score > 0){
+                    this.#ctx.fillStyle = "#0095DD";
+                    this.#ctx.font = "9px Arial";
+                    this.#ctx.fillText("NEW RECORD!!", 240, 95);
+                    this.#ctx.fillStyle = "gray"; 
+                }
+                this.#ctx.font = "12px Arial";
+                this.#ctx.fillText("Thank you for playing.", 100 + Math.random(), 110+Math.random());
+                if(this.#clock){
+                    this.#ctx.fillText("Press 'R' to restart.", 100, 130);
+                }
+
+                //a
+                if (this.#keySet.has(65)) {
+                    this.#me.x -= this.#me.vx;
+                }
+                //w
+                if (this.#keySet.has(87)) {
+                    this.#me.y -= this.#me.vy;
+                }
+                //d
+                if (this.#keySet.has(68)) {
+                    this.#me.x += this.#me.vx;
+                }
+                //s
+                if (this.#keySet.has(83)) {
+                    this.#me.y += this.#me.vy;
+                }
+                //space
+                if (this.#keySet.has(32)) {
+                    this.#bgObjects.push(new ItemL(this.#me.x + 4, this.#me.y + 4, 3, (Math.random() - 0.5) * 6));
+                }
+            }
+            this.#gameId = window.requestAnimationFrame(this.gameClearScene);
         }
     }
 
@@ -355,6 +447,89 @@ export class HiokiShooter {
         }
     }
 
+    #updateObjects(){
+        for (var i = 0; i < this.#mainObjects.length; i++) {
+            var mo = this.#mainObjects[i];
+
+            mo.draw(this.#ctx);
+            mo.update(this);
+
+            if(i===0){//#me
+                if(mo.x < 0){
+                    mo.x = 0;
+                }
+                if(mo.y < 0){
+                    mo.y = 0;
+                }
+                if(mo.x > this.#canvas.length){
+                    mo.x = this.#canvas.length - 10;
+                }
+            }else{
+                if (!mo.alive || mo.x < -100 || mo.x > this.#parent.clientWidth + 100 || mo.y < -100 || mo.y > this.#parent.clientHeight + 100){
+                    if(!mo.alive){//when destroyed by user
+                        this.#score += mo.score;
+
+                        if(!mo.restrictItemDrop){
+                            var roll = Math.floor(Math.random() * 100);//0-99
+                            if (roll % 10 == 0) {
+                                this.#itemObjects.push(new Item3(mo.x, mo.y, -1, 1));
+                            }
+                            else if (roll % 17 == 0) {
+                                this.#itemObjects.push(new ItemL(mo.x, mo.y, -1, 1));
+                            }
+                        }
+                        if(mo.kind === "boss"){
+                            this.changeStage(mo.unlockStage || "normal");
+                        }
+                    }
+
+                    if(mo.alive && mo.kind === "boss"){//bossは画面縮小で消えないようにする・・・
+                        mo.x = this.#parent.clientWidth;//warp
+                    }else{
+                        this.#mainObjects.splice(i, 1);
+                        i--;
+                    }
+                }
+            }
+        }
+        //items
+        for (var i = 0; i < this.#itemObjects.length; i++) {
+            var io = this.#itemObjects[i];
+
+            io.draw(this.#ctx);
+            io.update();
+
+            if (io.x > this.#parent.clientWidth || io.x < -10 || io.y < -10 || io.y > this.#parent.clientHeight) {
+                this.#itemObjects.splice(i, 1);
+                i--;
+            }
+        }
+
+        //bullets
+        for (var i = 0; i < this.#bullets.length; i++) {
+            var b = this.#bullets[i];
+
+            b.draw(this.#ctx);
+            b.update();
+
+            if (b.x > this.#parent.clientWidth || !b.alive) {
+                this.#bullets.splice(i, 1);
+                i--;
+            }
+        }
+
+        //bullets-enemy
+        for (var i = 0; i < this.#bullets_en.length; i++) {
+            var b = this.#bullets_en[i];
+            b.draw(this.#ctx);
+            b.update();
+            if (b.x > this.#parent.clientWidth || b.x < -100 || !b.alive) {
+                this.#bullets_en.splice(i, 1);
+                i--;
+            }
+        }
+    }
+
     gameloop() {
         this.#now = Date.now();
         if (this.#now - this.#then > this.#fpsInterval) {
@@ -385,6 +560,11 @@ export class HiokiShooter {
                 this.#me.bulletMaker(this.#bullets, this.#me);
                 //this.#bullets.push(new Bullet(this.#me.x + 61, this.#me.y + 10, 20, 0));
             }
+            //esc
+            if (this.#keySet.has(27)) {
+                this.#me.life = 0;
+            }
+            /*
             //e
             if (this.#keySet.has(69)) {
                 this.#me.life = 5000;
@@ -397,6 +577,7 @@ export class HiokiShooter {
             if (this.#keySet.has(84)) {
                 this.#bullets.push(new Missle(550, 50, 0, 3, 3, this.#me, this));
             }
+            */
 
             //update score
             if(this.#score >= this.#highscore){
@@ -405,13 +586,14 @@ export class HiokiShooter {
 
             //change stage
             if(this.#score >= 100 && this.#stage != "boss1" &&!this.#clearedStages.includes("boss1")){
-                console.log(this.#clearedStages);
                 this.#stage = "boss1";
                 this.#mainObjects.push(new Boss1(this.#canvas.width, 50));
             }else if(this.#score >= 1000 && this.#stage != "boss2" &&!this.#clearedStages.includes("boss2")){
-                console.log(this.#clearedStages);
                 this.#stage = "boss2";
-                this.#mainObjects.push(new Boss1(this.#canvas.width, 50));
+                this.#mainObjects.push(new Boss2(this.#canvas.width, 50));
+            }else if(this.#score >= 5000 && this.#stage != "boss3" &&!this.#clearedStages.includes("boss3")){
+                this.#stage = "boss3";
+                this.#mainObjects.push(new LastBoss(this.#canvas.width, 50));
             }
 
             //generate enemy etc.
@@ -445,8 +627,15 @@ export class HiokiShooter {
                         this.#mainObjects.push(new En_sm(this.#canvas.width + Math.random() * 10, Math.random() * 100, -7, 0));
                     }
                     break;
+                case "clear":
                 case "result":
-                    break;
+                    window.cancelAnimationFrame(this.#gameId);
+
+                    if(this.#highscore < this.#score){
+                        this.#highscore = this.#score;
+                    }
+                    this.#gameId = window.requestAnimationFrame(this.gameClearScene);
+                    return;
                 default:
                     break;
             }
@@ -469,93 +658,15 @@ export class HiokiShooter {
             // update objects
             //------
             //objects
-            for (var i = 0; i < this.#mainObjects.length; i++) {
-                var mo = this.#mainObjects[i];
-
-                mo.draw(this.#ctx);
-                mo.update(this);
-
-                if(i===0){//#me
-                    if(mo.x < 0){
-                        mo.x = 0;
-                    }
-                    if(mo.y < 0){
-                        mo.y = 0;
-                    }
-                    if(mo.x > this.#canvas.length){
-                        mo.x = this.#canvas.length - 10;
-                    }
-                }else{
-                    if (!mo.alive || mo.x < -100 || mo.x > this.#parent.clientWidth + 100 || mo.y < -100 || mo.y > this.#parent.clientHeight + 100){
-                        if(!mo.alive){//when destroyed by user
-                            this.#score += mo.score;
-
-                            if(!mo.restrictItemDrop){
-                                var roll = Math.floor(Math.random() * 100);//0-99
-                                if (roll % 10 == 0) {
-                                    this.#itemObjects.push(new Item3(mo.x, mo.y, -1, 1));
-                                }
-                                else if (roll % 17 == 0) {
-                                    this.#itemObjects.push(new ItemL(mo.x, mo.y, -1, 1));
-                                }
-                            }
-                            if(mo.kind === "boss"){
-                                this.changeStage(mo.unlockStage || "normal");
-                            }
-                        }
-
-                        if(mo.alive && mo.kind === "boss"){//bossは画面縮小で消えないようにする・・・
-                            mo.x = this.#parent.clientWidth;//warp
-                        }else{
-                            this.#mainObjects.splice(i, 1);
-                            i--;
-                        }
-                    }
-                }
-            }
-            //items
-            for (var i = 0; i < this.#itemObjects.length; i++) {
-                var io = this.#itemObjects[i];
-
-                io.draw(this.#ctx);
-                io.update();
-
-                if (io.x > this.#parent.clientWidth || io.x < -10 || io.y < -10 || io.y > this.#parent.clientHeight) {
-                    this.#itemObjects.splice(i, 1);
-                    i--;
-                }
-            }
-
-            //bullets
-            for (var i = 0; i < this.#bullets.length; i++) {
-                var b = this.#bullets[i];
-
-                b.draw(this.#ctx);
-                b.update();
-
-                if (b.x > this.#parent.clientWidth || !b.alive) {
-                    this.#bullets.splice(i, 1);
-                    i--;
-                }
-            }
-
-            //bullets-enemy
-            for (var i = 0; i < this.#bullets_en.length; i++) {
-                var b = this.#bullets_en[i];
-                b.draw(this.#ctx);
-                b.update();
-                if (b.x > this.#parent.clientWidth || b.x < -100 || !b.alive) {
-                    this.#bullets_en.splice(i, 1);
-                    i--;
-                }
-            }
-            
+            this.#updateObjects();            
         }
         //detect gameover
         if(this.#me.life <= 0){
             window.cancelAnimationFrame(this.#gameId);
-            this.#highscore = this.#score;
-            this.#score = 0;
+
+            if(this.#highscore < this.#score){
+                this.#highscore = this.#score;
+            }
             this.#gameId = window.requestAnimationFrame(this.gameOverScene);
         }else{
             this.#gameId = window.requestAnimationFrame(this.gameloop);
