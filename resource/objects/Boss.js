@@ -151,7 +151,7 @@ export class Boss2 {
         this.mode = "appear";
         this.damaged = false;
 
-        this.life = 2000;
+        this.life = 800;
         this.alive = true;
 
         this.itr = 0;
@@ -274,7 +274,7 @@ export class LastBoss {
         this.mode = "appear";
         this.damaged = false;
 
-        this.life = 450;
+        this.life = 1000;
         this.alive = true;
 
         this.itr = 0;
