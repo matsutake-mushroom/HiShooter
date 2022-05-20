@@ -591,7 +591,7 @@ export class HiokiShooter {
             }else if(this.#score >= 1000 && this.#stage != "boss2" &&!this.#clearedStages.includes("boss2")){
                 this.#stage = "boss2";
                 this.#mainObjects.push(new Boss2(this.#canvas.width, 50));
-            }else if(this.#score >= 6000 && this.#stage != "boss3" &&!this.#clearedStages.includes("boss3")){
+            }else if(this.#score >= 5000 && this.#stage != "boss3" &&!this.#clearedStages.includes("boss3")){
                 this.#stage = "boss3";
                 this.#mainObjects.push(new LastBoss(this.#canvas.width, 50));
             }
